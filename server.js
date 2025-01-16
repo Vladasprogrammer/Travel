@@ -124,6 +124,17 @@ app.get('/admin/list/create', (req, res) => {
 app.post('/admin/list/store', (req, res) => {
  
   const { title, text } = req.body;
+
+  if (!title || !text) {
+    updateSession(req, 'message', {text: 'Užpildykite visus laukus', type: 'danger'});
+    res.redirect(URL + 'admin/list/create');
+    return;
+  }
+
+
+
+
+
   const id = uuidv4();
 
   let list = fs.readFileSync('./data/list.json', 'utf8');
