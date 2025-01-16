@@ -3,6 +3,12 @@ const app = express();
 const fs = require("fs");
 const bodyParser = require('body-parser');
 const handlebars = require('handlebars');
+
+handlebars.registerHelper('isdefined', function (value) {   
+  return value !== undefined && value !== null; 
+});
+
+
 const cookieParser = require('cookie-parser');
 const { v4: uuidv4 } = require('uuid');
 const md5 = require('md5');
@@ -78,6 +84,19 @@ const messagesMiddleware = (req, res, next) => {
 };
 
 
+// OLD DATA MIDDLEWARE
+
+const oldDataMiddleware = (req, res, next) => {
+  if (req.method === 'POST') {
+    const oldData = req.body;
+    updateSession(req, 'oldData', oldData);
+  }
+  if (req.method === 'GET') {
+    updateSession(req, 'oldData', null);
+  }
+  next();
+}
+
 
 
 app.use(express.static('public'));
@@ -86,6 +105,7 @@ app.use(cookieParser());
 app.use(cookieMiddleware);
 app.use(sessionMiddleware);
 app.use(messagesMiddleware);
+app.use(oldDataMiddleware);
 
 
 // ROUTES
@@ -112,7 +132,8 @@ app.get('/admin/list', (req, res) => {
 app.get('/admin/list/create', (req, res) => {
     const data = {
       pageTitle: 'Pridėti naują įrašą',
-      message: req.user.message || null
+      message: req.user.message || null,
+      oldData: req.user.oldData || null
     };
 
     const html = makeHtml(data, 'create');
@@ -180,7 +201,8 @@ app.get('/admin/list/edit/:id', (req, res) => {
   const data = {
       pageTitle: 'Redaguoti įrašą',
       item,
-      message: req.user.message || null
+      message: req.user.message || null,
+      oldData: req.user.oldData || null
   };
 
   const html = makeHtml(data, 'edit');
