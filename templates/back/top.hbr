@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{#if metaRedirect}}
+        <meta http-equiv="refresh" content="3;url={{url}}admin">
+    {{/if}}
+    <link rel="stylesheet" href="{{url}}back.style.css">
+    <script src="{{url}}back.app.js" defer></script>
+    <title>{{pageTitle}}</title>
+</head>
+
+<body>
+    {{#if noMenu}}
+    {{else}}
+    <div class="container text-center">
+        <div class="row">
+            <div class="col">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="{{url}}admin">Pradinis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url}}admin/list">Pirmo puslapio sąrašas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url}}admin/list/create">Pridėti į puslapio sąrašą</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{/if}}
+
+    {{#if message}}
+    <div class="container mt-5" data-msg>
+        <div class="row">
+            <div class="col-4"></div>
+            <div class="col-4">
+                <div class="alert alert-{{message.type}}" role="alert">
+                    {{message.text}}
+                </div>
+            </div>
+            <div class="col-4"></div>
+        </div>
+    </div>
+    {{/if}}
