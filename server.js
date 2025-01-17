@@ -4,10 +4,9 @@ const fs = require("fs");
 const bodyParser = require('body-parser');
 const handlebars = require('handlebars');
 
-handlebars.registerHelper('isdefined', function (value) {   
-  return value !== undefined && value !== null; 
+handlebars.registerHelper('isdefined', function (value) {
+  return value !== undefined && value !== null;
 });
-
 
 const cookieParser = require('cookie-parser');
 const { v4: uuidv4 } = require('uuid');
@@ -30,13 +29,13 @@ const updateSession = (req, prop, data) => {
   let sessions = fs.readFileSync('./data/session.json', 'utf8');
   sessions = JSON.parse(sessions);
   let session = sessions.find(s => s.sessionId === sessionId);
-  if (!session){
-      return;
+  if (!session) {
+    return;
   }
   if (null === data) {
-      delete session[prop];
+    delete session[prop];
   } else {
-      session[prop] = data;
+    session[prop] = data;
   }
   sessions = JSON.stringify(sessions);
   fs.writeFileSync('./data/session.json', sessions);
@@ -49,7 +48,7 @@ const cookieMiddleware = (req, res, next) => {
   let visitsCount = req.cookies.visits || 0;
   visitsCount++;
   // ONE YEAR
-  res.cookie('visits', visitsCount, { maxAge: 1000 * 60 * 60 * 24 * 365});
+  res.cookie('visits', visitsCount, { maxAge: 1000 * 60 * 60 * 24 * 365 });
   next();
 };
 
@@ -57,18 +56,18 @@ const cookieMiddleware = (req, res, next) => {
 const sessionMiddleware = (req, res, next) => {
   let sessionId = req.cookies.sessionId || null;
   if (!sessionId) {
-      sessionId = md5(uuidv4()); // md5 kad būtų trumpesnis
+    sessionId = md5(uuidv4()); // md5 kad būtų trumpesnis
   }
   let session = fs.readFileSync('./data/session.json', 'utf8');
   session = JSON.parse(session);
   let user = session.find(u => u.sessionId === sessionId);
   if (!user) {
-      user = {
-          sessionId
-      };
-      session.push(user);
-      session = JSON.stringify(session);
-      fs.writeFileSync('./data/session.json', session);
+    user = {
+      sessionId
+    };
+    session.push(user);
+    session = JSON.stringify(session);
+    fs.writeFileSync('./data/session.json', session);
   }
   req.user = user;
   res.cookie('sessionId', sessionId, { maxAge: 1000 * 60 * 60 * 24 * 365 });
@@ -78,11 +77,10 @@ const sessionMiddleware = (req, res, next) => {
 // MESSAGES MIDDLEWARE
 const messagesMiddleware = (req, res, next) => {
   if (req.method === 'GET') {
-      updateSession(req, 'message', null);
+    updateSession(req, 'message', null);
   }
   next();
 };
-
 
 // OLD DATA MIDDLEWARE
 
@@ -97,8 +95,6 @@ const oldDataMiddleware = (req, res, next) => {
   next();
 }
 
-
-
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -107,19 +103,18 @@ app.use(sessionMiddleware);
 app.use(messagesMiddleware);
 app.use(oldDataMiddleware);
 
-
 // ROUTES
 
 //READ
 app.get('/admin/list', (req, res) => {
- 
+
   let list = fs.readFileSync('./data/list.json', 'utf8');
   list = JSON.parse(list);
 
   const data = {
-      pageTitle: 'Sąrašas',
-      list,
-      message: req.user.message || null
+    pageTitle: 'Sąrašas',
+    list,
+    message: req.user.message || null
   };
 
   const html = makeHtml(data, 'list');
@@ -127,34 +122,29 @@ app.get('/admin/list', (req, res) => {
 
 });
 
-
 // CREATE 
 app.get('/admin/list/create', (req, res) => {
-    const data = {
-      pageTitle: 'Pridėti naują įrašą',
-      message: req.user.message || null,
-      oldData: req.user.oldData || null
-    };
+  const data = {
+    pageTitle: 'Pridėti naują įrašą',
+    message: req.user.message || null,
+    oldData: req.user.oldData || null
+  };
 
-    const html = makeHtml(data, 'create');
+  const html = makeHtml(data, 'create');
 
-    res.send(html);
+  res.send(html);
 });
 
 // STORE
 app.post('/admin/list/store', (req, res) => {
- 
+
   const { title, text } = req.body;
 
   if (!title || !text) {
-    updateSession(req, 'message', {text: 'Užpildykite visus laukus', type: 'danger'});
+    updateSession(req, 'message', { text: 'Užpildykite visus laukus', type: 'danger' });
     res.redirect(URL + 'admin/list/create');
     return;
   }
-
-
-
-
 
   const id = uuidv4();
 
@@ -163,25 +153,25 @@ app.post('/admin/list/store', (req, res) => {
   list = JSON.parse(list);
 
   list.push({
-      id,
-      title,
-      text
+    id,
+    title,
+    text
   });
 
   list = JSON.stringify(list);
 
   fs.writeFileSync('./data/list.json', list);
 
-  updateSession(req, 'message', {text: 'Įrašas pridėtas', type: 'success'});
+  updateSession(req, 'message', { text: 'Įrašas pridėtas', type: 'success' });
 
   res.redirect(URL + 'admin/list');
 
 });
 
- 
+
 //EDIT
 app.get('/admin/list/edit/:id', (req, res) => {
-   
+
   let list = fs.readFileSync('./data/list.json', 'utf8');
   list = JSON.parse(list);
 
@@ -199,10 +189,10 @@ app.get('/admin/list/edit/:id', (req, res) => {
   }
 
   const data = {
-      pageTitle: 'Redaguoti įrašą',
-      item,
-      message: req.user.message || null,
-      oldData: req.user.oldData || null
+    pageTitle: 'Redaguoti įrašą',
+    item,
+    message: req.user.message || null,
+    oldData: req.user.oldData || null
   };
 
   const html = makeHtml(data, 'edit');
@@ -212,11 +202,11 @@ app.get('/admin/list/edit/:id', (req, res) => {
 
 //UPDATE
 app.post('/admin/list/update/:id', (req, res) => {
-   
+
   const { title, text } = req.body;
 
   if (!title || !text) {
-    updateSession(req, 'message', {text: 'Užpildykite visus laukus', type: 'danger'});
+    updateSession(req, 'message', { text: 'Užpildykite visus laukus', type: 'danger' });
     res.redirect(URL + 'admin/list/edit/' + req.params.id);
     return;
   }
@@ -227,14 +217,14 @@ app.post('/admin/list/update/:id', (req, res) => {
   const item = list.find(i => i.id === req.params.id);
 
   if (!item) {
-      const data = {
-          pageTitle: 'Puslapis nerastas',
-          noMenu: true,
-          metaRedirect: true,
-      };
-      const html = makeHtml(data, '404');
-      res.status(404).send(html);
-      return;
+    const data = {
+      pageTitle: 'Puslapis nerastas',
+      noMenu: true,
+      metaRedirect: true,
+    };
+    const html = makeHtml(data, '404');
+    res.status(404).send(html);
+    return;
   }
 
   item.title = title;
@@ -243,7 +233,7 @@ app.post('/admin/list/update/:id', (req, res) => {
   list = JSON.stringify(list);
   fs.writeFileSync('./data/list.json', list);
 
-  updateSession(req, 'message', {text: 'Įrašas atnaujintas', type: 'success'});
+  updateSession(req, 'message', { text: 'Įrašas atnaujintas', type: 'success' });
 
   res.redirect(URL + 'admin/list');
 
@@ -251,7 +241,7 @@ app.post('/admin/list/update/:id', (req, res) => {
 
 // SHOW
 app.get('/admin/list/show/:id', (req, res) => {
-   
+
   let list = fs.readFileSync('./data/list.json', 'utf8');
   list = JSON.parse(list);
 
@@ -272,10 +262,10 @@ app.get('/admin/list/show/:id', (req, res) => {
 
 
   const data = {
-      pageTitle: 'Peržiurėti įrašą',
-      item,
-      lettersInText,
-      message: req.user.message || null,
+    pageTitle: 'Peržiurėti įrašą',
+    item,
+    lettersInText,
+    message: req.user.message || null,
   };
 
   const html = makeHtml(data, 'show');
@@ -283,17 +273,80 @@ app.get('/admin/list/show/:id', (req, res) => {
 
 });
 
+//DELETE
+app.get('/admin/list/delete/:id', (req, res) => {
+
+  let list = fs.readFileSync('./data/list.json', 'utf8');
+  list = JSON.parse(list);
+
+  const item = list.find(i => i.id === req.params.id);
+
+  if (!item) {
+    const data = {
+      pageTitle: 'Puslapis nerastas',
+      noMenu: true,
+      metaRedirect: true,
+    };
+    const html = makeHtml(data, '404');
+    res.status(404).send(html);
+    return;
+  }
+  const data = {
+    pageTitle: 'Patvirtinimas',
+    item,
+    noMenu: true,
+
+  };
+  const html = makeHtml(data, 'delete');
+  res.send(html);
+});
+
+//DESTROY
+app.post('/admin/list/destroy/:id', (req, res) => {
+
+  let list = fs.readFileSync('./data/list.json', 'utf8');
+  list = JSON.parse(list);
+
+  list = list.filter(i => i.id !== req.params.id);
+
+  list = JSON.stringify(list);
+  fs.writeFileSync('./data/list.json', list);
+
+  updateSession(req, 'message', { text: 'Įrašas ištrintas', type: 'success' });
+
+  res.redirect(URL + 'admin/list');
+
+});
+
+app.post('/admin/list/sort', (req, res) => {
+
+  const order = req.body.order;
+  let list = fs.readFileSync('./data/list.json', 'utf8');
+  list = JSON.parse(list);
+
+  list.sort((a, b) => {
+    return order.indexOf(a.id) - order.indexOf(b.id);
+  });
+
+  list = JSON.stringify(list);
+  fs.writeFileSync('./data/list.json', list);
+
+  updateSession(req, 'message', { text: 'Sąrašas atnaujintas', type: 'success' });
+
+  res.redirect(URL + 'admin/list');
+
+});
 
 
 
 app.get('/admin', (req, res) => {
 
-    const data = {
-      pageTitle: 'Administravimas Pagrindinis',
-    }
-    const html = makeHtml(data, 'main');
+  const data = {
+    pageTitle: 'Administravimas Pagrindinis',
+  }
+  const html = makeHtml(data, 'main');
 
-    res.send(html);
+  res.send(html);
 });
 
 app.get('/admin/page-top', (req, res) => {
@@ -328,7 +381,7 @@ app.post('/admin/page-top', (req, res) => {
 
   fs.writeFileSync('./data/main-top.json', mainTopData);
 
-  updateSession(req, 'message', {text: 'Puslapis atnaujintas', type: 'success'});
+  updateSession(req, 'message', { text: 'Puslapis atnaujintas', type: 'success' });
 
   res.redirect(URL + 'admin/page-top');
 });
@@ -338,11 +391,15 @@ app.get('/', (req, res) => {
   let mainTopData = fs.readFileSync('./data/main-top.json', 'utf8');
   mainTopData = JSON.parse(mainTopData);
 
+  let list = fs.readFileSync('./data/list.json', 'utf8');
+  list = JSON.parse(list);
+
   mainTopData.page_text = mainTopData.page_text.split('\n');
 
   const data = {
     pageTitle: 'Pirmasis puslapis',
-    mainTopData
+    mainTopData,
+    list
   }
   const html = makeHtml(data, 'landing', false);
 
