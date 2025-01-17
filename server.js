@@ -3,9 +3,22 @@ const app = express();
 const fs = require("fs");
 const bodyParser = require('body-parser');
 const handlebars = require('handlebars');
+const multer = require('multer');
 
 handlebars.registerHelper('isdefined', function (value) {
   return value !== undefined && value !== null;
+});
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/images/');
+  },
+  filename: function (req, file, cb) {
+    const randomName = uuidv4();
+    const extension = file.originalname.split('.').pop();
+    const filename = `${randomName}.${extension}`;
+    cb(null, filename);
+  }
 });
 
 const cookieParser = require('cookie-parser');
@@ -93,19 +106,32 @@ const oldDataMiddleware = (req, res, next) => {
     updateSession(req, 'oldData', null);
   }
   next();
-}
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype !== 'image/jpeg' && file.mimetype !== 'image/png' && file.mimetype !== 'image/webp') {
+      cb(null, false);
+      req.fileValidationError = true;
+    } else {
+      cb(null, true);
+    }
+  }
+});
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cookieMiddleware);
+app.use(upload.single('top_image'));
 app.use(sessionMiddleware);
 app.use(messagesMiddleware);
 app.use(oldDataMiddleware);
 
 // ROUTES
 
-//READ
+// READ
 app.get('/admin/list', (req, res) => {
 
   let list = fs.readFileSync('./data/list.json', 'utf8');
@@ -168,8 +194,7 @@ app.post('/admin/list/store', (req, res) => {
 
 });
 
-
-//EDIT
+// EDIT
 app.get('/admin/list/edit/:id', (req, res) => {
 
   let list = fs.readFileSync('./data/list.json', 'utf8');
@@ -200,7 +225,7 @@ app.get('/admin/list/edit/:id', (req, res) => {
 
 });
 
-//UPDATE
+// UPDATE
 app.post('/admin/list/update/:id', (req, res) => {
 
   const { title, text } = req.body;
@@ -273,7 +298,7 @@ app.get('/admin/list/show/:id', (req, res) => {
 
 });
 
-//DELETE
+// DELETE
 app.get('/admin/list/delete/:id', (req, res) => {
 
   let list = fs.readFileSync('./data/list.json', 'utf8');
@@ -301,7 +326,7 @@ app.get('/admin/list/delete/:id', (req, res) => {
   res.send(html);
 });
 
-//DESTROY
+// DESTROY
 app.post('/admin/list/destroy/:id', (req, res) => {
 
   let list = fs.readFileSync('./data/list.json', 'utf8');
@@ -354,12 +379,11 @@ app.get('/admin/page-top', (req, res) => {
   let mainTopData = fs.readFileSync('./data/main-top.json', 'utf8');
   mainTopData = JSON.parse(mainTopData);
 
-  console.log("🔎 req.user:", req.user);
-
   const data = {
     pageTitle: 'Pagrindinio puslapio viršus',
     mainTopData,
-    message: req.user.message || null
+    message: req.user.message || null,
+    oldData: req.user.oldData || null
   }
   const html = makeHtml(data, 'pageTop');
 
@@ -369,12 +393,27 @@ app.get('/admin/page-top', (req, res) => {
 app.post('/admin/page-top', (req, res) => {
 
   const { main_title, sub_title, page_text } = req.body;
-  // will be validated later
 
-  let mainTopData = {
+  if (req.fileValidationError) {
+    updateSession(req, 'message', { text: 'Netinkamas paveiksliukas', type: 'danger' });
+    res.redirect(URL + 'admin/page-top');
+    return;
+  }
+  let mainTopData = fs.readFileSync('./data/main-top.json', 'utf8');
+  mainTopData = JSON.parse(mainTopData);
+  let fileName = req.file?.filename;
+
+  if (!fileName) {
+    fileName = mainTopData.top_image;
+  } else {
+    fs.unlinkSync('./public/imges/' + mainTopData.top_image);
+  }
+
+  mainTopData = {
     main_title,
     sub_title,
     page_text,
+    top_image: fileName
   }
 
   mainTopData = JSON.stringify(mainTopData);
