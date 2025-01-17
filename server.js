@@ -221,14 +221,6 @@ app.post('/admin/list/update/:id', (req, res) => {
     return;
   }
 
-
-
-
-
-
-
-
-
   let list = fs.readFileSync('./data/list.json', 'utf8');
   list = JSON.parse(list);
 
@@ -254,6 +246,40 @@ app.post('/admin/list/update/:id', (req, res) => {
   updateSession(req, 'message', {text: 'Įrašas atnaujintas', type: 'success'});
 
   res.redirect(URL + 'admin/list');
+
+});
+
+// SHOW
+app.get('/admin/list/show/:id', (req, res) => {
+   
+  let list = fs.readFileSync('./data/list.json', 'utf8');
+  list = JSON.parse(list);
+
+  const item = list.find(i => i.id === req.params.id);
+
+  if (!item) {
+    const data = {
+      pageTitle: 'Puslapis nerastas',
+      noMenu: true,
+      metaRedirect: true,
+    };
+    const html = makeHtml(data, '404');
+    res.status(404).send(html);
+    return;
+  }
+
+  const lettersInText = item.text.length;
+
+
+  const data = {
+      pageTitle: 'Peržiurėti įrašą',
+      item,
+      lettersInText,
+      message: req.user.message || null,
+  };
+
+  const html = makeHtml(data, 'show');
+  res.send(html);
 
 });
 
