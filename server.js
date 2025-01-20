@@ -406,7 +406,9 @@ app.post('/admin/page-top', (req, res) => {
   if (!fileName) {
     fileName = mainTopData.top_image;
   } else {
-    fs.unlinkSync('./public/imges/' + mainTopData.top_image);
+    if (mainTopData.top_image) {
+      fs.unlinkSync('./public/images/' + mainTopData.top_image);
+    }
   }
 
   mainTopData = {

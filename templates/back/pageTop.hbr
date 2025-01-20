@@ -18,17 +18,26 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Puslapio sub pavadinimas</label>
-                            <input type="text" class="form-control" name="sub_title" value="{{mainTopData.sub_title}}">
+                            <input type="text" class="form-control" name="sub_title" value="{{#if (isdefined oldData.sub_title)}}{{oldData.sub_title}}{{else}}{{item.sub_title}}{{/if}}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Puslapio tekstas</label>
-                            <textarea class="form-control" name="page_text"
-                                rows="10">{{mainTopData.page_text}}</textarea>
+                            <textarea class="form-control" name="page_text" rows="10">{{#if (isdefined oldData.page_text)}}{{oldData.page_text}}{{else}}{{item.page_text}}{{/if}}</textarea>
                         </div>
-                        <div class="mb-3">
-                            <label for="formFile" class="form-label">Paveiksliukas</label>
-                            <input class="form-control" type="file" id="formFile" name="top_image">
+                        <div class="mb-3 with-img">
+                            <div>
+                                <label for="formFile" class="form-label">Paveiksliukas</label>
+                                <input class="form-control" type="file" id="formFile" name="top_image">
+                            </div>
+                            <div class="img-bin">
+                                {{#if mainTopData.top_image}}
+                                <img src="{{url}}images/{{mainTopData.top_image}}" alt="hero">
+                                {{else}}
+                                <img src="{{url}}images/no-image.jpg" alt="hero">
+                                {{/if}}
+                            </div>
                         </div>
+
 
                         <button type="submit" class="btn btn-primary">Išsaugoti</button>
                     </form>
