@@ -108,6 +108,27 @@ const oldDataMiddleware = (req, res, next) => {
   next();
 };
 
+// AUTH MIDDLEWARE
+const auth = (req, res, next) => {
+
+  const isLogin = req.url.includes('/login') && req.method === 'GET';
+  if (isLogin && req.user?.user) {
+    res.redirect(URL);
+    return;
+  }
+
+  const isAdmin = req.url.includes('/admin');
+  if (!isAdmin) {
+    next();
+    return;
+  }
+  if (req.user?.user?.role === 'admin' || req.user?.user?.role === 'editor') {
+    next();
+  } else {
+    res.redirect(URL + 'login');
+  }
+}
+
 const upload = multer({
   storage: storage,
   fileFilter: function (req, file, cb) {
@@ -128,6 +149,7 @@ app.use(upload.single('top_image'));
 app.use(sessionMiddleware);
 app.use(messagesMiddleware);
 app.use(oldDataMiddleware);
+app.use(auth);
 
 // ROUTES
 
@@ -153,11 +175,11 @@ app.get('/admin/list/create', (req, res) => {
   const data = {
     pageTitle: 'Pridėti naują įrašą',
     message: req.user.message || null,
-    oldData: req.user.oldData || null
+    oldData: req.user.oldData || null,
+    user: req.user.user || null
   };
 
   const html = makeHtml(data, 'create');
-
   res.send(html);
 });
 
@@ -368,6 +390,7 @@ app.get('/admin', (req, res) => {
 
   const data = {
     pageTitle: 'Administravimas Pagrindinis',
+    user: req.user.user || null
   }
   const html = makeHtml(data, 'main');
 
@@ -383,7 +406,8 @@ app.get('/admin/page-top', (req, res) => {
     pageTitle: 'Pagrindinio puslapio viršus',
     mainTopData,
     message: req.user.message || null,
-    oldData: req.user.oldData || null
+    oldData: req.user.oldData || null,
+    user: req.user.user || null
   }
   const html = makeHtml(data, 'pageTop');
 
@@ -398,7 +422,8 @@ app.post('/admin/page-top', (req, res) => {
     updateSession(req, 'message', { text: 'Netinkamas paveiksliukas', type: 'danger' });
     res.redirect(URL + 'admin/page-top');
     return;
-  }
+  };
+  
   let mainTopData = fs.readFileSync('./data/main-top.json', 'utf8');
   mainTopData = JSON.parse(mainTopData);
   let fileName = req.file?.filename;
@@ -409,14 +434,14 @@ app.post('/admin/page-top', (req, res) => {
     if (mainTopData.top_image) {
       fs.unlinkSync('./public/images/' + mainTopData.top_image);
     }
-  }
+  };
 
   mainTopData = {
     main_title,
     sub_title,
     page_text,
     top_image: fileName
-  }
+  };
 
   mainTopData = JSON.stringify(mainTopData);
 
@@ -426,6 +451,48 @@ app.post('/admin/page-top', (req, res) => {
 
   res.redirect(URL + 'admin/page-top');
 });
+
+//LOGIN
+app.get('/login', (req, res) => {
+  const data = {
+    pageTitle: 'Prisijungimas',
+    message: req.user.message || null,
+    oldData: req.user.oldData || null,
+    noMenu: true,
+  };
+  const html = makeHtml(data, 'login');
+  res.send(html);
+});
+
+app.post('/login', (req, res) => {
+  const isLogout = req.query.hasOwnProperty('logout');
+  if (isLogout) {
+      updateSession(req, 'user', null);
+      updateSession(req, 'message', { text: 'Sėkmingai atsijungta', type: 'success' });
+      res.redirect(URL + 'login');
+      return;
+  }
+
+  const { name, psw } = req.body;
+  let users = fs.readFileSync('./data/users.json', 'utf8');
+  users = JSON.parse(users);
+  const user = users.find(u => u.name === name && u.psw === md5(psw));
+  if (!user) {
+    updateSession(req, 'message', { text: 'Neteisingi prisijungimo duomenys', type: 'danger' });
+    res.redirect(URL + 'login');
+    return;
+  }
+  updateSession(req, 'message', { text: 'Sėkmingai prisijungta', type: 'success' });
+  updateSession(req, 'user', user);
+  if (user.role === 'admin' || user.role == 'editor') {
+    res.redirect(URL + 'admin');
+  } else {
+    res.redirect(URL);
+  };
+});
+
+
+
 
 app.get('/', (req, res) => {
 
