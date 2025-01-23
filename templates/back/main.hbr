@@ -9,7 +9,7 @@
                     <h5 class="card-title">Puslapio TVS pagrindinis</h5>
                     <p class="card-text">Čia galite redaguoti pagrindinio puslapio pavadinimus, tekstus ir paveiksliuką</p>
                     <a href="{{url}}admin/page-top" class="card-link">Pirmo puslapio viršus</a>
-                    <a href="{{url}}admin/page-list" class="card-link">Pirmo puslapio sąrašas</a>
+                    <a href="{{url}}admin/list" class="card-link">Pirmo puslapio sąrašas</a>
                 </div>
             </div>
         </div>

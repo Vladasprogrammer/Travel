@@ -162,7 +162,9 @@ app.get('/admin/list', (req, res) => {
   const data = {
     pageTitle: 'Sąrašas',
     list,
-    message: req.user.message || null
+    message: req.user.message || null,
+    user: req.user.user || null,
+    oldData: req.user.oldData || null,
   };
 
   const html = makeHtml(data, 'list');
@@ -458,6 +460,7 @@ app.get('/login', (req, res) => {
     pageTitle: 'Prisijungimas',
     message: req.user.message || null,
     oldData: req.user.oldData || null,
+    user: req.user.user || null,
     noMenu: true,
   };
   const html = makeHtml(data, 'login');
@@ -494,6 +497,8 @@ app.post('/login', (req, res) => {
 
 
 
+
+
 app.get('/', (req, res) => {
 
   let mainTopData = fs.readFileSync('./data/main-top.json', 'utf8');
@@ -507,7 +512,8 @@ app.get('/', (req, res) => {
   const data = {
     pageTitle: 'Pirmasis puslapis',
     mainTopData,
-    list
+    list,
+    user: req.user.user || null,
   }
   const html = makeHtml(data, 'landing', false);
 

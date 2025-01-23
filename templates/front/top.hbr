@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" href="data:,"> {{!-- This is for the annoying favicon error that shows up for me in the Mozilla Firefox... --}}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{url}}front.style.css">
@@ -11,7 +10,7 @@
     <title>{{pageTitle}}</title>
 </head>
 <body>
-    <header>
+        <header>
         <nav>
             <div class="logo">
                 <a href="{{url}}">
@@ -23,8 +22,16 @@
                 <li><a href="{{url}}about">About</a></li>
                 <li><a href="{{url}}contact">Contact</a></li>
             </ul>
-            <div class="login">
-                <a href="{{url}}login">Login</a>
+            <div>
+
+                        {{#if user}}
+                        <form action="{{url}}login?logout" method="post">
+                            <span class="login-name">{{user.name}}, </span><button class="login" type="submit" class="btn btn-link">Atsijungti</button>
+                        </form>
+                        {{else}}
+                            <a class="login" href="{{url}}login">Prisijungti</a>
+                        {{/if}}
+      
             </div>
         </nav>
     </header>
